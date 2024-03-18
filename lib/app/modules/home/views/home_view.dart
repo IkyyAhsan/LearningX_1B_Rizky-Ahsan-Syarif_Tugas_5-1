@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:homework_5_1/app/modules/home/controllers/home_controller.dart';
 import 'package:homework_5_1/app/modules/home/models/meal_food_model.dart';
 
-
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
@@ -12,33 +11,42 @@ class HomeView extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        flexibleSpace: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 12, right: 12), 
-            child: Container(
-              height: 45,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.all(12),
-              child: const Row(
-                children: [
-                  Icon(Icons.search,
-                  color: Colors.black45,
-                  ),
-                  SizedBox(width: 10,),
-                  Text('Search',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(60.h),
+        child: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          flexibleSpace: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12, right: 12),
+              child: Container(
+                height: 45,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.search,
+                      color: Colors.black45,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        onChanged: controller.filterMeals,
+                        decoration: const InputDecoration(
+                          hintText: 'Search',
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -47,54 +55,36 @@ class HomeView extends GetView<HomeController> {
       body: Padding(
         padding: const EdgeInsets.only(left: 12, right: 12),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "List Meal From API",
-            style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w500),
-          ).paddingOnly(bottom: 20.h),
-          Flexible(
-            child: FutureBuilder<MealsFoodModel>(
-              future: controller.getMealFood(),
-              builder: (_, snapshot) {
-                var data = snapshot.data?.categories;
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(snapshot.error.toString()),
-                  );
-                }
-                if (snapshot.hasData) {
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      mainAxisSpacing: 10.h,
-                      crossAxisSpacing: 10.h,
-                      crossAxisCount: 2,
-                      childAspectRatio: .8,
-                    ),
-                    itemBuilder: (_, index) => itemMeals(data, index),
-                    itemCount: data?.length,
-                  );
-                } else {
-                  return const Center(
-                    child: Text("Data Kosong"),
-                  );
-                }
-              },
-            ),
-          )
-        ],
-      ).paddingOnly(left: 20.w, right: 20.w, bottom: 10.h),
-        ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "List Meal From API",
+              style:
+                  TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w500),
+            ).paddingOnly(bottom: 20.h),
+            Flexible(
+              child: Obx(
+                () => GridView.builder(
+                  shrinkWrap: true,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    mainAxisSpacing: 10.h,
+                    crossAxisSpacing: 10.h,
+                    crossAxisCount: 2,
+                    childAspectRatio: .8,
+                  ),
+                  itemBuilder: (_, index) =>
+                      itemMeals(controller.filteredMeals, index),
+                  itemCount: controller.filteredMeals.length,
+                ),
+              ),
+            )
+          ],
+        ).paddingOnly(left: 20.w, right: 20.w, bottom: 10.h),
+      ),
     );
   }
 
-  GestureDetector itemMeals(List<Category>? data, int index) {
+  GestureDetector itemMeals(List<Category> data, int index) {
     return GestureDetector(
       onTap: () {
         Get.toNamed('/detail-recipe', arguments: data[index].strCategory);
@@ -104,7 +94,7 @@ class HomeView extends GetView<HomeController> {
         color: Colors.white,
         child: Column(
           children: [
-            Image.network(data![index].strCategoryThumb),
+            Image.network(data[index].strCategoryThumb),
             Padding(
               padding: const EdgeInsets.all(8),
               child: Column(
@@ -112,13 +102,13 @@ class HomeView extends GetView<HomeController> {
                 children: [
                   Text(
                     data[index].strCategory,
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 15.sp),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 15.sp),
                   ),
                   Text(
                     data[index].strCategoryDescription,
                     style: TextStyle(fontSize: 10.sp),
-                    maxLines: 3, // Jumlah baris maksimal yang ditampilkan
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   )
                 ],
